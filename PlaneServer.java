@@ -88,8 +88,9 @@ public class PlaneServer extends Thread{
                Object object = objectInputStream.readObject();
                Message mesg = Message.class.cast(object);
                //processMess
+               processMessage(mesg);
                System.out.println(object.toString());
-               s.close();
+           s.close();
              //  boolean r = true;
                int inputCount = 0;
              //  byte inputLine[] = new byte[256];
@@ -103,7 +104,8 @@ public class PlaneServer extends Thread{
            }
        }
        catch (IOException e){
-           System.out.println(e);
+           plane.printMessage("In Server");
+           plane.printMessage(e.toString());
        }
        catch (ClassNotFoundException e){
            System.out.println(e);
@@ -111,32 +113,76 @@ public class PlaneServer extends Thread{
     }
     public void processMessage(Message o) throws IOException{
         if(o.isRequest() & !plane.hasToken){
+            plane.printMessage("Request forwarded");
+            //forward request to holder;
+            o.forward(this.id);
+            sendMessage(o,this.holder);
+//            Socket mySocket = new Socket();
+//            InetSocketAddress targetAddress = new InetSocketAddress(InetAddress.getByName("localhost"), 1000+holder);
+//            mySocket.connect(targetAddress);
+//            DataOutputStream out = new DataOutputStream(mySocket.getOutputStream());
+//            ObjectOutputStream objectOutputStream = new ObjectOutputStream(out);
+//            o.forward(1000+id);
+//            //Message m=new Message(true,false,"localhost",this.id);
+//            objectOutputStream.writeObject(o);
+//            objectOutputStream.flush();
+//            mySocket.close();
+            //Forward request
+        }
+        if(o.isRequest() & plane.hasToken){
+            plane.printMessage("Token requested");
+            //Send privillege to from
+            Message tokenMessage=new Message(false,true,"localhost",this.id);
+            tokenMessage.setForwarded(o.forwarded);
+            this.holder=o.dequeue();
+            plane.hasToken=false;
+            sendMessage(tokenMessage,this.holder);
+            //Update holder to from/
+        }
+        if(o.isToken() & !plane.asked){
+            plane.printMessage("Token forwarded");
+            this.holder=o.dequeue();
+            sendMessage(o,this.holder);
+            //Forward request
+            //Send message to from
+            //Update holder
+            //this.holder=o.getFromID();
+        }
+        if(o.isToken() && plane.asked && o.forwarded.isEmpty()){
+            plane.printMessage("Token accepted");
+            plane.asked=false;
+            plane.hasToken=true;
+            enterRunway();
+            //Enter CS
+        }
+
+    }
+    public void sendMessage(Message o,int to){
+        try {
             Socket mySocket = new Socket();
-            InetSocketAddress targetAddress = new InetSocketAddress(InetAddress.getByName("localhost"), serverPort);
+            InetSocketAddress targetAddress = new InetSocketAddress(InetAddress.getByName("localhost"), 1000+to);
             mySocket.connect(targetAddress);
             DataOutputStream out = new DataOutputStream(mySocket.getOutputStream());
             ObjectOutputStream objectOutputStream = new ObjectOutputStream(out);
-            o.setFromPort(this.serverPort);
+            o.forward(this.id);
             //Message m=new Message(true,false,"localhost",this.id);
             objectOutputStream.writeObject(o);
             objectOutputStream.flush();
             mySocket.close();
-            //Forward request
         }
-        if(o.isRequest() & plane.hasToken){
+        catch (UnknownHostException e){
+            System.out.println(e);
+        }
+        catch (IOException e){
+            System.out.println(e);
+        }
+    }
+    public void enterRunway(){
+        plane.printMessage("Entered runway");
 
-            //Send privillge
-        }
-        if(o.isToken() & !plane.asked){
-            //Forward request
-            //Update holder
-        }
-        if(o.isToken() & plane.asked){
-            plane.asked=false;
-            plane.hasToken=true;
-            //Enter CS
-        }
-
+    }
+    public void exitRunway(){
+        plane.landed=true;
     }
     //Get request
 

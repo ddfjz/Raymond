@@ -11,7 +11,11 @@ public class Plane {
     boolean asked=false;
     boolean hasToken=false;
 
-
+    Plane(){
+        this.hasToken=false;
+        this.landed=false;
+        this.asked=false;
+    }
     public void printMessage(String m){
         System.out.println(m);
     }

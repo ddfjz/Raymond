@@ -53,13 +53,17 @@ public class PlaneClient extends Thread {
             //InetSocketAddress targetAddress=new InetSocketAddress(InetAddress.getByName("localhost"),Integer.parseInt(args[1]));
 
             plane.printMessage("Started");
-
-            //
+            Socket mySocket = new Socket();
+            //Send request for CS
             while(r) {
                 Thread.sleep(4000);
-                if(!plane.landed) {
+                if(!plane.landed && !plane.asked) {
+                    //Check critcal section
+                    //if has token and cs empty
+                    //elif has token and cs not empty
+                    //error
+                    //elif no token
                     plane.printMessage("Check");
-                    Socket mySocket = new Socket();
                     InetSocketAddress targetAddress = new InetSocketAddress(InetAddress.getByName("localhost"), serverPort);
                     mySocket.connect(targetAddress);
                     DataOutputStream out = new DataOutputStream(mySocket.getOutputStream());
@@ -67,11 +71,12 @@ public class PlaneClient extends Thread {
                     Message m=new Message(true,false,"localhost",this.id);
                     objectOutputStream.writeObject(m);
                     objectOutputStream.flush();
-                    mySocket.close();
+                    plane.asked=true;
 
                 }
 
             }
+            mySocket.close();
 //            InputStream stream = mySocket.getInputStream();
 //            stream.read(buffer, 0, 128);
 //            System.out.println(new String(buffer));
@@ -85,6 +90,7 @@ public class PlaneClient extends Thread {
            // }
         }
         catch (IOException e){
+            plane.printMessage("In client");
             plane.printMessage(e.toString());
 
         }
