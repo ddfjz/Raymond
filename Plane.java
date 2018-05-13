@@ -10,16 +10,20 @@ public class Plane {
     boolean using=false;
     boolean asked=false;
     boolean hasToken=false;
+    int holder;
 
-    Plane(){
+    Plane(int h){
         this.hasToken=false;
         this.landed=false;
         this.asked=false;
+        this.holder=h;
     }
     public void printMessage(String m){
         System.out.println(m);
     }
-
+//    public updateHolder(int h){
+////        pass;
+////    }
 
     }
 

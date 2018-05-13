@@ -26,12 +26,24 @@ public class Node {
     }
 
     public static void main(String[] args) throws IOException {
-        Plane p = new Plane();
         int id = Integer.parseInt(args[0]);
+
+        int holder=0;
+        String hold="Holder_config";
+        String lineh = null;
+        FileReader fileReaderhold = new FileReader(hold);
+        BufferedReader bufferedReaderh = new BufferedReader(fileReaderhold);
+        while ((lineh = bufferedReaderh.readLine()) != null) {
+            String[] l = lineh.split(",");
+            if (Integer.parseInt(l[0]) == id) {
+                holder=Integer.parseInt(l[1]);
+            }
+        }
+        Plane p = new Plane(holder);
         if (id==Integer.parseInt(args[1])){
             p.hasToken=true;
         }
-        PlaneServer sPlane = new PlaneServer(1000 + id, p);
+        PlaneServer sPlane = new PlaneServer(id, p);
         String fileName = "configConnections.txt";
         String line = null;
         FileReader fileReader = new FileReader(fileName);
@@ -39,7 +51,7 @@ public class Node {
         while ((line = bufferedReader.readLine()) != null) {
             String[] l = line.split(",");
             if (Integer.parseInt(l[0]) == id) {
-                PlaneClient cPlane = new PlaneClient(1000 + Integer.parseInt(l[1]), p,id);
+                PlaneClient cPlane = new PlaneClient(Integer.parseInt(l[1]), p,id);
                 cPlane.start();
 
             }

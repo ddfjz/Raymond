@@ -63,15 +63,17 @@ public class PlaneClient extends Thread {
                     //elif has token and cs not empty
                     //error
                     //elif no token
-                    plane.printMessage("Check");
-                    InetSocketAddress targetAddress = new InetSocketAddress(InetAddress.getByName("localhost"), serverPort);
-                    mySocket.connect(targetAddress);
-                    DataOutputStream out = new DataOutputStream(mySocket.getOutputStream());
-                    ObjectOutputStream objectOutputStream = new ObjectOutputStream(out);
-                    Message m=new Message(true,false,"localhost",this.id);
-                    objectOutputStream.writeObject(m);
-                    objectOutputStream.flush();
-                    plane.asked=true;
+                    if(this.holder== plane.holder && this.holder!=this.id ) {
+                        plane.printMessage("Check");
+                        InetSocketAddress targetAddress = new InetSocketAddress(InetAddress.getByName("localhost"), 1000+this.holder);
+                        mySocket.connect(targetAddress);
+                        DataOutputStream out = new DataOutputStream(mySocket.getOutputStream());
+                        ObjectOutputStream objectOutputStream = new ObjectOutputStream(out);
+                        Message m = new Message(true, false, "localhost", this.id);
+                        objectOutputStream.writeObject(m);
+                        objectOutputStream.flush();
+                        plane.asked = true;
+                    }
 
                 }
 

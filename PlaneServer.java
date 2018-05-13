@@ -27,8 +27,10 @@ public class PlaneServer extends Thread{
     //    this.id=id;
    // }
    PlaneServer(int s,Plane p) {
-       this.serverPort=s;
+       this.id=s;
+       this.serverPort=1000+s;
        this.plane=p;
+       this.holder=p.holder;
    }
     public static void main(String[] args) throws IOException {
         //int serverPort=Integer.parseInt(args[0]);
@@ -88,9 +90,9 @@ public class PlaneServer extends Thread{
                Object object = objectInputStream.readObject();
                Message mesg = Message.class.cast(object);
                //processMess
-               processMessage(mesg);
+               s.close();
+               processMessage(mesg);//Seperate thread
                System.out.println(object.toString());
-           s.close();
              //  boolean r = true;
                int inputCount = 0;
              //  byte inputLine[] = new byte[256];
@@ -112,10 +114,12 @@ public class PlaneServer extends Thread{
        }
     }
     public void processMessage(Message o) throws IOException{
+        plane.printMessage("Mesg; "+o.forwarded);
         if(o.isRequest() & !plane.hasToken){
             plane.printMessage("Request forwarded");
             //forward request to holder;
             o.forward(this.id);
+            plane.printMessage("Mesgafter; "+o.forwarded);
             sendMessage(o,this.holder);
 //            Socket mySocket = new Socket();
 //            InetSocketAddress targetAddress = new InetSocketAddress(InetAddress.getByName("localhost"), 1000+holder);
@@ -135,6 +139,7 @@ public class PlaneServer extends Thread{
             Message tokenMessage=new Message(false,true,"localhost",this.id);
             tokenMessage.setForwarded(o.forwarded);
             this.holder=o.dequeue();
+            plane.holder=this.holder;
             plane.hasToken=false;
             sendMessage(tokenMessage,this.holder);
             //Update holder to from/
@@ -142,6 +147,7 @@ public class PlaneServer extends Thread{
         if(o.isToken() & !plane.asked){
             plane.printMessage("Token forwarded");
             this.holder=o.dequeue();
+            plane.holder=this.holder;
             sendMessage(o,this.holder);
             //Forward request
             //Send message to from
@@ -159,12 +165,13 @@ public class PlaneServer extends Thread{
     }
     public void sendMessage(Message o,int to){
         try {
+            plane.printMessage("Sending to "+Integer.toString(to));
             Socket mySocket = new Socket();
             InetSocketAddress targetAddress = new InetSocketAddress(InetAddress.getByName("localhost"), 1000+to);
             mySocket.connect(targetAddress);
             DataOutputStream out = new DataOutputStream(mySocket.getOutputStream());
             ObjectOutputStream objectOutputStream = new ObjectOutputStream(out);
-            o.forward(this.id);
+           // o.forward(this.id);
             //Message m=new Message(true,false,"localhost",this.id);
             objectOutputStream.writeObject(o);
             objectOutputStream.flush();
